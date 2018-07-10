@@ -1,6 +1,5 @@
 #!/bin/bash
 
-cmsPath="~/public_html"
 tmpKeyName="aws_insecure_key"
 HOST="$2"
 PORT="$3"
@@ -43,6 +42,10 @@ sshKeygen() {
 }
 
 cmsDetector() {
+    read -p "Enter Magento 1/2 root directory path (NOT PUB). For example: /var/www/website (default: '~/public_html): " cmsPath
+    if [[ -z $cmsPath ]];then
+        cmsPath="~/public_html"
+    fi
     if ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "stat $cmsPath/app/etc/local.xml" &>/dev/null
     then
         cms="m1"
