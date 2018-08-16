@@ -1,6 +1,5 @@
 #!/bin/bash
 
-echo "test"
 tmpKeyName="aws_insecure_key"
 HOST="$2"
 PORT="$3"
