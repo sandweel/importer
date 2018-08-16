@@ -78,7 +78,7 @@ sqlExport() {
         dbUser=`echo $sqlDataInfo | awk {'print $2'}`
         userPass=`echo $sqlDataInfo | awk {'print $3'}`
     fi
-    ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd ~;mysqldump '$dbName' -u'$dbUser' -p'$userPass' -v --skip-triggers --single-transaction | gzip -9" > auto_$dbName.sql.gz && gzip -d auto_$dbName.sql.gz
+    ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd ~;mysqldump -h 127.0.0.1 '$dbName' -u'$dbUser' -p'$userPass' -v --skip-triggers --single-transaction | gzip -9" > auto_$dbName.sql.gz && gzip -d auto_$dbName.sql.gz
     getStatus "SQL download"
 }
 
@@ -104,6 +104,22 @@ sshCopyId() {
     ssh-copy-id -i ~/.ssh/id_rsa.pub $USER@$HOST -p $PORT &>/dev/null
     getStatus "Try to connect: ssh $USER@$HOST -p $PORT. SQL copy key"
 }
+selfUpdate() {
+    SCRIPT=$(readlink -f "$0")
+    SCRIPTPATH=$(dirname "$SCRIPT")
+    SCRIPTNAME="$0"
+    BRANCH="master"
+
+    cd $SCRIPTPATH
+    git fetch
+
+        [ -n $(git diff --name-only origin/$BRANCH | grep $SCRIPTNAME) ] && {
+        echo "Found a new version of me, updating myself..."
+        git pull --force
+        echo "Updated. Re-run script it again!"
+        exit 1
+    }
+}
 case $1 in
     "media")
         sshKeygen
@@ -126,6 +142,9 @@ case $1 in
     ;;
     "ssh")
         sshCopyId
+    ;;
+    "self")
+        selfUpdate
     ;;
     *)
         echo -e "Usage: /bin/bash $0 [media|sql|both|ssh] [hostname or ip address] [port (default 22)]\n"
