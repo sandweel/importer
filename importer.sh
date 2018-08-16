@@ -114,12 +114,13 @@ selfUpdate() {
     cd $SCRIPTPATH
     git fetch
 
-        [ -n $(git diff --name-only origin/$BRANCH | grep $SCRIPTNAME) ] && {
+    if [[ -n `git diff --name-only origin/$BRANCH | grep $SCRIPTNAME` ]];then
         echo "Found a new version of me, updating myself..."
-        git pull --force
-        echo "Updated. Re-run script it again!"
+        git pull --force && \
+        echo "$(green)Updated. Re-run script it again!($regular)" || \
+        echo "$(red)Not updated. Try to clone it manually: 'git clone git@bitbucket.org:absolutewebservices/importer.git'($regular)"
         exit 1
-    }
+    fi
 }
 case $1 in
     "media")
