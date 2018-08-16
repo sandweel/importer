@@ -108,7 +108,7 @@ sshCopyId() {
 selfUpdate() {
     SCRIPT=$(readlink -f "$0")
     SCRIPTPATH=$(dirname "$SCRIPT")
-    SCRIPTNAME="$0"
+    SCRIPTNAME="importer.sh"
     BRANCH="master"
 
     cd $SCRIPTPATH
