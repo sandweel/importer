@@ -67,7 +67,7 @@ cmsDetector() {
         cmsPath="~/public_html"
     fi
     read -p "Enter MySQL host (default: localhost): " mysqlHost
-    if [[ -z $cmsPath ]];then
+    if [[ -z $mysqlHost ]];then
         mysqlHost="localhost"
     fi
     if ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "stat $cmsPath/app/etc/local.xml" &>/dev/null
