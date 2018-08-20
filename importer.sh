@@ -102,7 +102,7 @@ sqlExport() {
         dbUser=`echo $sqlDataInfo | awk {'print $2'}`
         userPass=`echo $sqlDataInfo | awk {'print $3'}`
     fi
-    ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd ~;mysqldump -h $mysqlHost '$dbName' -u'$dbUser' -p'$userPass' -v --skip-triggers --single-transaction | gzip -9" > auto_$dbName.sql.gz && gzip -d auto_$dbName.sql.gz
+    ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd ~;mysqldump -h '$mysqlHost' '$dbName' -u'$dbUser' -p'$userPass' -v --skip-triggers --single-transaction | gzip -9" > auto_$dbName.sql.gz && gzip -d auto_$dbName.sql.gz
     getStatus "SQL download"
 }
 
