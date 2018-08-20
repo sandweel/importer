@@ -24,13 +24,13 @@ selfUpdate() {
     BRANCH="master"
 
     cd $SCRIPTPATH
-    git reset --hard
     if [[ ! -d $SCRIPTPATH/.git ]];then
         echo "$(red)You are running scripts outside GIT. Please clone origin script using 'git clone git@bitbucket.org:absolutewebservices/importer.git' and run inside GIT'$(regular)"
         exit 1
     fi
     git fetch &>/dev/null
     if [[ -n `git diff --name-only origin/$BRANCH | grep $SCRIPTNAME` ]];then
+        git reset --hard
         echo "Found a new version of me, updating myself..."
         git pull --force &>/dev/null && \
         echo "$(green)Updated. Re-run script again!$(regular)" || \
