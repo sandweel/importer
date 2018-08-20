@@ -63,6 +63,7 @@ sshKeygen() {
 
 cmsDetector() {
     read -p "Enter Magento 1/2 root directory path (NOT PUB). For example: /var/www/website (default: '~/public_html): " cmsPath
+    read -p "Enter mysql host (default: localhost): " mysqlHost
     if [[ -z $cmsPath ]];then
         cmsPath="~/public_html"
     fi
@@ -98,7 +99,7 @@ sqlExport() {
         dbUser=`echo $sqlDataInfo | awk {'print $2'}`
         userPass=`echo $sqlDataInfo | awk {'print $3'}`
     fi
-    ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd ~;mysqldump -h 127.0.0.1 '$dbName' -u'$dbUser' -p'$userPass' -v --skip-triggers --single-transaction | gzip -9" > auto_$dbName.sql.gz && gzip -d auto_$dbName.sql.gz
+    ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd ~;mysqldump -h $mysqlHost '$dbName' -u'$dbUser' -p'$userPass' -v --skip-triggers --single-transaction | gzip -9" > auto_$dbName.sql.gz && gzip -d auto_$dbName.sql.gz
     getStatus "SQL download"
 }
 
