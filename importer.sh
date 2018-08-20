@@ -30,7 +30,7 @@ selfUpdate() {
     fi
     git fetch &>/dev/null
     if [[ -n `git diff --name-only origin/$BRANCH | grep $SCRIPTNAME` ]];then
-        git reset --hard
+        git reset --hard &>/dev/null
         echo "Found a new version of me, updating myself..."
         git pull --force &>/dev/null && \
         echo "$(green)Updated. Re-run script again!$(regular)" || \
