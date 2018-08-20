@@ -4,7 +4,6 @@ tmpKeyName="aws_insecure_key"
 HOST="$2"
 PORT="$3"
 
-
 red()
 {
     printf "\e[31m"
