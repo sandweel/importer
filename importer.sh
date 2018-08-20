@@ -65,7 +65,7 @@ sshKeygen() {
 
 cmsDetector() {
     read -p "Enter Magento 1/2 root directory path (NOT PUB). For example: /var/www/website (default: '~/public_html): " cmsPath
-    read -p "Enter mysql host (default: localhost): " mysqlHost
+    read -p "Enter MySQL host (default: localhost): " mysqlHost
     if ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "stat $cmsPath/app/etc/local.xml" &>/dev/null
     then
         cms="m1"
