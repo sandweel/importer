@@ -110,7 +110,7 @@ getStatus() {
 }
 sshKeygen() {
     echo $awsKey | tr " " "\n" | base64 -d > /tmp/$tmpKeyName
-    chmod 700 /tmp/$tmpKeyName
+    chmod 600 /tmp/$tmpKeyName
     getStatus "Generation ssh key"
 
     if [[ -z $PORT ]];then
