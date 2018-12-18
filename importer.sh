@@ -98,7 +98,7 @@ selfUpdate() {
     fi
 }
 
-#selfUpdate
+selfUpdate
 
 getStatus() {
     if [[ $? != 0 ]];then
@@ -109,7 +109,7 @@ getStatus() {
     fi
 }
 sshKeygen() {
-    echo $awsKey | tr " " "\n" | base64 -d > /tmp/$tmpKeyName
+    echo $awsKey | tr " " "\n" | base64 --decode > /tmp/$tmpKeyName
     chmod 600 /tmp/$tmpKeyName
     getStatus "Generation ssh key"
 
@@ -122,10 +122,6 @@ sshKeygen() {
         exit 1
     fi
     read -p "Enter login: " USER
-#    rm -f /tmp/$tmpKeyName*
-#    ssh-keygen -b 2048 -t rsa -f /tmp/$tmpKeyName -q -N "" -C "$tmpKeyName" &>/dev/null
-#    ssh-copy-id -i /tmp/$tmpKeyName.pub $USER@$HOST -p $PORT &>/dev/null
-#    getStatus "Copying ssh key"
 }
 
 cmsDetector() {
