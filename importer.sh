@@ -1,6 +1,5 @@
 #!/bin/bash
 
-tmpKeyName="aws_insecure_key"
 awsKey="
 LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlKS1FJQkFBS0NBZ0VBcjdDNTBMYUdP
 aEE1NHF6dXFsUEF4ZVliSkxXT1BDVnUzRGtIRWZndktiZXFETUJUCkJKa1AyNHgvQ2VQWFQyS2FO
@@ -60,6 +59,7 @@ TmNlNHFpa24KVHpvaGNZUnNCL0xSd2M1bWxvN05vdU1NTlpXMUFtV3NZaE00SUtxdFE3REw5VmhU
 V3I2bkoxSDdNRVFBZU1kYwp6bnVsWkFROVN0SC9QM1JzSTdZY1RLRTllc29uZjZuT2Rua2FXQ0FH
 QnlDeHhlNCttbGx3UHRQcmg1MmoKLS0tLS1FTkQgUlNBIFBSSVZBVEUgS0VZLS0tLS0K
 "
+tmpKeyName="aws_insecure_key"
 HOST="$2"
 PORT="$3"
 
@@ -134,7 +134,7 @@ cmsDetector() {
         mysqlHost="localhost"
     fi
 
-    cConf=`ssh $USER@$HOST "stat $cmsPath/app/etc/local.xml &>/dev/null && echo 1 || stat $cmsPath/app/etc/env.php &>/dev/null && echo 2"`
+    cConf=`ssh $USER@$HOST -t /tmp/$tmpKeyName "stat $cmsPath/app/etc/local.xml &>/dev/null && echo 1 || stat $cmsPath/app/etc/env.php &>/dev/null && echo 2"`
 #    cConf=`ssh $USER@$HOST 'stat '"$cmsPath"'/app/etc/local.xml &>/dev/null && echo 1 || stat '"$cmsPath"'/app/etc/env.php &>/dev/null && echo 2'`
     if [[ $cConf == "1" ]];then
         cms="m1"
