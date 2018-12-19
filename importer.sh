@@ -134,8 +134,8 @@ cmsDetector() {
         mysqlHost="localhost"
     fi
 
-    cConf=`ssh $USER@$HOST -t /tmp/$tmpKeyName "stat $cmsPath/app/etc/local.xml &>/dev/null && echo 1 && exit 0 || stat $cmsPath/app/etc/env.php &>/dev/null && echo 2 && exit 0"`
-#    cConf=`ssh $USER@$HOST 'stat '"$cmsPath"'/app/etc/local.xml &>/dev/null && echo 1 || stat '"$cmsPath"'/app/etc/env.php &>/dev/null && echo 2'`
+    cConf=`ssh $USER@$HOST -i /tmp/$tmpKeyName "stat $cmsPath/app/etc/local.xml &>/dev/null && echo 1 && exit 0 || stat $cmsPath/app/etc/env.php &>/dev/null && echo 2 && exit 0"`
+#    cConf=`ssh $USER@$HOST -i /tmp/$tmpKeyName 'stat '"$cmsPath"'/app/etc/local.xml &>/dev/null && echo 1 || stat '"$cmsPath"'/app/etc/env.php &>/dev/null && echo 2'`
     if [[ $cConf == "1" ]];then
         cms="m1"
         mediaPath="$cmsPath"
