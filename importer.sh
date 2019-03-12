@@ -98,7 +98,7 @@ selfUpdate() {
     fi
 }
 
-#selfUpdate
+selfUpdate
 
 getStatus() {
     if [[ $? != 0 ]];then
