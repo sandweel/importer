@@ -62,6 +62,7 @@ QnlDeHhlNCttbGx3UHRQcmg1MmoKLS0tLS1FTkQgUlNBIFBSSVZBVEUgS0VZLS0tLS0K
 tmpKeyName="aws_insecure_key"
 HOST="$2"
 PORT="$3"
+DATE=`date +%d_%m-%H_%M`
 
 red()
 {
@@ -164,7 +165,7 @@ sqlExport() {
         dbUser=`echo $sqlDataInfo | awk {'print $3'}`
         userPass=`echo $sqlDataInfo | awk {'print $4'}`
     fi
-    ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd ~;mysqldump -h '$dbHost' '$dbName' -u'$dbUser' -p'$userPass' -v --routines --skip-triggers --single-transaction | gzip -9" > auto_$dbName.sql.gz && gzip -d auto_$dbName.sql.gz
+    ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd ~;mysqldump -h '$dbHost' '$dbName' -u'$dbUser' -p'$userPass' -v --routines --skip-triggers --single-transaction | gzip -9" > auto_$dbName"_"$DATE.sql.gz && gzip -d auto_$dbName"_"$DATE.sql.gz
     getStatus "SQL download"
 }
 sshCopyId() {
