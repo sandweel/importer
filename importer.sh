@@ -111,6 +111,8 @@ getStatus() {
 sshKeygen() {
     echo $awsKey | tr " " "\n" | base64 --decode > /tmp/$tmpKeyName
     chmod 600 /tmp/$tmpKeyName
+    agentPID=$(eval `ssh-agent` | awk {'print $3'})
+    ssh-add /tmp/$tmpKeyName
     getStatus "Generation ssh key"
 
     if [[ -z $PORT ]];then
@@ -129,13 +131,8 @@ cmsDetector() {
     if [[ -z $cmsPath ]];then
         cmsPath="~/public_html"
     fi
-    read -p "Enter MySQL host (default: localhost): " mysqlHost
-    if [[ -z $mysqlHost ]];then
-        mysqlHost="localhost"
-    fi
 
     cConf=`ssh $USER@$HOST -i /tmp/$tmpKeyName -p $PORT "stat $cmsPath/app/etc/local.xml &>/dev/null && echo 1 && exit 0 || stat $cmsPath/app/etc/env.php &>/dev/null && echo 2 && exit 0"`
-#    cConf=`ssh $USER@$HOST -i /tmp/$tmpKeyName 'stat '"$cmsPath"'/app/etc/local.xml &>/dev/null && echo 1 || stat '"$cmsPath"'/app/etc/env.php &>/dev/null && echo 2'`
     if [[ $cConf == "1" ]];then
         cms="m1"
         mediaPath="$cmsPath"
@@ -156,17 +153,19 @@ mediaGet() {
 
 sqlExport() {
     if [[ $cms == "m1" ]];then
-        sqlDataInfo=`ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cat $configPath" | grep "username\|password\|dbname" | awk -F"[" {'print $3'} | awk -F"]" {'print $1'} | tr "\n" " "`
-        dbName=`echo $sqlDataInfo | awk {'print $3'}`
-        dbUser=`echo $sqlDataInfo | awk {'print $1'}`
-        userPass=`echo $sqlDataInfo | awk {'print $2'}`
-    elif [[ $cms == "m2" ]];then
-        sqlDataInfo=`ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cat $configPath" | grep "username\|password\|dbname" | awk -F"=>" {'print $2'} | awk -F"'" {'print $2'} | tr "\n" " "`
-        dbName=`echo $sqlDataInfo | awk {'print $1'}`
+        sqlDataInfo=`ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cat $configPath" | grep "host\|username\|password\|dbname" | awk -F"[" {'print $3'} | awk -F"]" {'print $1'} | | head -4 | tr "\n" " "`
+        dbHost=`echo $sqlDataInfo | awk {'print $1'}`
+        dbName=`echo $sqlDataInfo | awk {'print $4'}`
         dbUser=`echo $sqlDataInfo | awk {'print $2'}`
         userPass=`echo $sqlDataInfo | awk {'print $3'}`
+    elif [[ $cms == "m2" ]];then
+        sqlDataInfo=`ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cat $configPath" | grep "host\|username\|password\|dbname" | awk -F"=>" {'print $2'} | awk -F"'" {'print $2'} | head -4 | tr "\n" " "`
+        dbHost=`echo $sqlDataInfo | awk {'print $1'}`
+        dbName=`echo $sqlDataInfo | awk {'print $2'}`
+        dbUser=`echo $sqlDataInfo | awk {'print $3'}`
+        userPass=`echo $sqlDataInfo | awk {'print $4'}`
     fi
-    ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd ~;mysqldump -h '$mysqlHost' '$dbName' -u'$dbUser' -p'$userPass' -v --skip-triggers --single-transaction | gzip -9" > auto_$dbName.sql.gz && gzip -d auto_$dbName.sql.gz
+    ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd ~;mysqldump -h '$mysqlHost' '$dbName' -u'$dbUser' -p'$userPass' -v --routines --skip-triggers --single-transaction | gzip -9" > auto_$dbName.sql.gz && gzip -d auto_$dbName.sql.gz
     getStatus "SQL download"
 }
 sshCopyId() {
@@ -190,6 +189,7 @@ sshCopyId() {
 
 clearData() {
     rm -f /tmp/$tmpKeyName
+    kill $agentPID
 }
 
 case $1 in
