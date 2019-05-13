@@ -216,7 +216,7 @@ case $1 in
         sshCopyId
     ;;
     *)
-        echo -e "Usage: /bin/bash $0 [media|sql|both|ssh] [hostname or ip address] [port (default 22)]\n"
+        echo -e "Usage: /bin/bash $0 [media|sql|both|ssh] [server ip address] [ssh port (default 22)]\n"
         echo "media - copying media files in archive to the local node"
         echo "sql - create sql dump and download to the local node"
         echo "both - download media and sql dump to the local node"
