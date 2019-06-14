@@ -110,6 +110,12 @@ getStatus() {
     fi
 }
 sshKeygen() {
+    pvFile=`which pv`
+    if [ ! -f "$pvFile" ]; then
+        echo "You need to install PV command. How to install there: https://www.cyberciti.biz/open-source/command-line-hacks/pv-command-examples/"
+        exit 1
+    fi
+
     echo $awsKey | tr " " "\n" | base64 --decode > /tmp/$tmpKeyName
     chmod 600 /tmp/$tmpKeyName
     eval `ssh-agent`
@@ -147,6 +153,7 @@ cmsDetector() {
     fi
 }
 mediaGet() {
+
     declare -i mediaSize=`ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "du -sb $mediaPath/media" | awk {'print $1'}`
     ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd $mediaPath;tar --exclude='cache' -cf - media" | pv -s $mediaSize > $USER'_media.tar'
     getStatus "Media download"
