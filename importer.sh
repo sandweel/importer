@@ -99,7 +99,7 @@ selfUpdate() {
     fi
 }
 
-selfUpdate
+#selfUpdate
 
 getStatus() {
     if [[ $? != 0 ]];then
@@ -153,9 +153,13 @@ cmsDetector() {
     fi
 }
 mediaGet() {
-    declare -i mediaSize=`ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "du -sb $mediaPath/media" | awk {'print $1'}`
-    echo -e "\nMedia size - $mediaSize bytes"
-    ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd $mediaPath;tar --exclude='cache' -cf - media" | pv -s $mediaSize > $USER'_media.tar'
+    mediaSize=`ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "du -sb $mediaPath/media" | awk {'print $1'}`
+    declare -i mistake=$mediaSize/100
+    declare -i percent=$mistake*16
+    declare -i pvMediaSize=$mediaSize-$percent
+    hMediaSize=$(echo "$pvMediaSize/1073741824" | bc -l | awk '{printf "%f", $0}' | cut -c-4)
+    echo -e "\nMedia size - $hMediaSize""G"
+    ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd $mediaPath;tar --exclude='cache' -cf - media" | pv -b -c -p -r -s $pvMediaSize > $USER'_media.tar'
     getStatus "Media download"
 }
 
