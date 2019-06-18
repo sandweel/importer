@@ -153,8 +153,8 @@ cmsDetector() {
     fi
 }
 mediaGet() {
-
     declare -i mediaSize=`ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "du -sb $mediaPath/media" | awk {'print $1'}`
+    echo -e "\nMedia size - $mediaSize bytes"
     ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd $mediaPath;tar --exclude='cache' -cf - media" | pv -s $mediaSize > $USER'_media.tar'
     getStatus "Media download"
 }
