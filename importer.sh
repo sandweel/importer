@@ -118,8 +118,8 @@ prepare() {
             echo "$(bold)PV is missing. Trying to install...$(regular)"
             sudo apt install pv
         elif [[ $osType == "OSX" ]];then
-            echo "You need to install PV. Try to use $(bold)brew install pv$(regular) and rerun script."
-            exit 1
+#            echo "You need to install PV. Try to use $(bold)brew install pv$(regular) and rerun script."
+            brew install pv
         fi
     fi
     if [ ! -f "$sshPass" ]; then
@@ -127,8 +127,8 @@ prepare() {
             echo "$(bold)SSHPASS is missing. Trying to install...$(regular)"
             sudo apt install sshpass
         elif [[ $osType == "OSX" ]];then
-            echo "You need to install SSHPASS. Try to use $(bold)brew install sshpass$(regular) and rerun script."
-            exit 1
+#            echo "You need to install SSHPASS. Try to use $(bold)brew install sshpass$(regular) and rerun script."
+            brew install sshpass
         fi
     fi
 }
