@@ -118,7 +118,7 @@ prepare() {
             echo "$(bold)PV is missing. Trying to install...$(regular)"
             sudo apt install pv
         elif [[ $osType == "OSX" ]];then
-#            echo "You need to install PV. Try to use $(bold)brew install pv$(regular) and rerun script."
+            echo "$(bold)PV is missing. Trying to install...$(regular)"
             brew install pv
         fi
     fi
@@ -127,7 +127,7 @@ prepare() {
             echo "$(bold)SSHPASS is missing. Trying to install...$(regular)"
             sudo apt install sshpass
         elif [[ $osType == "OSX" ]];then
-#            echo "You need to install SSHPASS. Try to use $(bold)brew install sshpass$(regular) and rerun script."
+            echo "$(bold)SSHPASS is missing. Trying to install...$(regular)"
             brew install sshpass
         fi
     fi
@@ -161,7 +161,7 @@ sshKeygen() {
         exit 1
     fi
     read -p "Enter ssh login: " USER
-    read -p "Enter ssh password or leave empty:" PASSWORD
+    read -p "Enter ssh password or leave empty: " PASSWORD
     if [[ -z $PASSWORD ]];then
         sshExec="ssh $USER@$HOST -i /tmp/$tmpKeyName -p $PORT"
     else
