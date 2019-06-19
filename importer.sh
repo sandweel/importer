@@ -76,6 +76,10 @@ regular()
 {
     printf "\e[m"
 }
+bold()
+{
+    printf "\e[1m"
+}
 
 selfUpdate() {
     SCRIPT=$(readlink -f "$0")
@@ -98,8 +102,39 @@ selfUpdate() {
         exit 1
     fi
 }
+prepare() {
+    sshPass=`which sshpass`
+    pvFile=`which pv`
 
-#selfUpdate
+    if [[ `uname | grep -c [Ll]inux 2>/dev/null` == "1" ]];then
+        osType="Linux"
+
+    elif [[ `uname | grep -c [Dd]arwin 2>/dev/null` == "1" ]];then
+        osType="OSX"
+    fi
+
+    if [ ! -f "$pvFile" ]; then
+        if [[ $osType == "Linux" ]];then
+            echo "$(bold)PV is missing. Trying to install...$(regular)"
+            sudo apt install pv
+        elif [[ $osType == "OSX" ]];then
+            echo "You need to install PV. Try to use $(bold)brew install pv$(regular) and rerun script."
+            exit 1
+        fi
+    fi
+    if [ ! -f "$sshPass" ]; then
+        if [[ $osType == "Linux" ]];then
+            echo "$(bold)SSHPASS is missing. Trying to install...$(regular)"
+            sudo apt install sshpass
+        elif [[ $osType == "OSX" ]];then
+            echo "You need to install SSHPASS. Try to use $(bold)brew install sshpass$(regular) and rerun script."
+            exit 1
+        fi
+    fi
+}
+
+selfUpdate
+prepare
 
 getStatus() {
     if [[ $? != 0 ]];then
@@ -109,13 +144,9 @@ getStatus() {
         echo "$(green)$@ finished successfully!$(regular)"
     fi
 }
-sshKeygen() {
-    pvFile=`which pv`
-    if [ ! -f "$pvFile" ]; then
-        echo "You need to install PV command. How to install there: https://www.cyberciti.biz/open-source/command-line-hacks/pv-command-examples/"
-        exit 1
-    fi
 
+
+sshKeygen() {
     echo $awsKey | tr " " "\n" | base64 --decode > /tmp/$tmpKeyName
     chmod 600 /tmp/$tmpKeyName
     eval `ssh-agent`
@@ -129,7 +160,13 @@ sshKeygen() {
         echo "$(red)Hostname or ip address is missing$(regular)"
         exit 1
     fi
-    read -p "Enter login: " USER
+    read -p "Enter ssh login: " USER
+    read -p "Enter ssh password or leave empty:" PASSWORD
+    if [[ -z $PASSWORD ]];then
+        sshExec="ssh $USER@$HOST -i /tmp/$tmpKeyName -p $PORT"
+    else
+        sshExec="sshpass -p$PASSWORD ssh $USER@$HOST -p $PORT"
+    fi
 }
 
 cmsDetector() {
@@ -138,7 +175,7 @@ cmsDetector() {
         cmsPath="~/public_html"
     fi
 
-    cConf=`ssh $USER@$HOST -i /tmp/$tmpKeyName -p $PORT "stat $cmsPath/app/etc/local.xml &>/dev/null && echo 1 && exit 0 || stat $cmsPath/app/etc/env.php &>/dev/null && echo 2 && exit 0"`
+    cConf=`$sshExec "stat $cmsPath/app/etc/local.xml &>/dev/null && echo 1 && exit 0 || stat $cmsPath/app/etc/env.php &>/dev/null && echo 2 && exit 0"`
     if [[ $cConf == "1" ]];then
         cms="m1"
         mediaPath="$cmsPath"
@@ -153,31 +190,31 @@ cmsDetector() {
     fi
 }
 mediaGet() {
-    mediaSize=`ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "du -sb $mediaPath/media" | awk {'print $1'}`
+    mediaSize=`$sshExec "du -sb $mediaPath/media" | awk {'print $1'}`
     declare -i mistake=$mediaSize/100
     declare -i percent=$mistake*16
     declare -i pvMediaSize=$mediaSize-$percent
     hMediaSize=$(echo "$pvMediaSize/1073741824" | bc -l | awk '{printf "%f", $0}' | cut -c-4)
     echo -e "\nMedia size - $hMediaSize""G"
-    ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd $mediaPath;tar --exclude='cache' -cf - media" | pv -b -c -p -r -s $pvMediaSize > $USER'_media.tar'
+    $sshExec "cd $mediaPath;tar --exclude='cache' -cf - media" | pv -b -c -p -r -s $pvMediaSize > $USER'_media.tar'
     getStatus "Media download"
 }
 
 sqlExport() {
     if [[ $cms == "m1" ]];then
-        sqlDataInfo=`ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cat $configPath" | grep -A 10 "<default_setup>" | grep "host\|username\|password\|dbname" | awk -F"[" {'print $3'} | awk -F"]" {'print $1'} | head -4 | tr "\n" " "`
+        sqlDataInfo=`$sshExec "cat $configPath" | grep -A 10 "<default_setup>" | grep "host\|username\|password\|dbname" | awk -F"[" {'print $3'} | awk -F"]" {'print $1'} | head -4 | tr "\n" " "`
         dbHost=`echo $sqlDataInfo | awk {'print $1'}`
         dbName=`echo $sqlDataInfo | awk {'print $4'}`
         dbUser=`echo $sqlDataInfo | awk {'print $2'}`
         userPass=`echo $sqlDataInfo | awk {'print $3'}`
     elif [[ $cms == "m2" ]];then
-        sqlDataInfo=`ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cat $configPath" | grep -A 10 "'default' =>" | grep "host\|username\|password\|dbname" | awk -F"=>" {'print $2'} | awk -F"'" {'print $2'} | head -4 | tr "\n" " "`
+        sqlDataInfo=`$sshExec "cat $configPath" | grep -A 10 "'default' =>" | grep "host\|username\|password\|dbname" | awk -F"=>" {'print $2'} | awk -F"'" {'print $2'} | head -4 | tr "\n" " "`
         dbHost=`echo $sqlDataInfo | awk {'print $1'}`
         dbName=`echo $sqlDataInfo | awk {'print $2'}`
         dbUser=`echo $sqlDataInfo | awk {'print $3'}`
         userPass=`echo $sqlDataInfo | awk {'print $4'}`
     fi
-    ssh $USER@$HOST -p $PORT -i /tmp/$tmpKeyName "cd ~;mysqldump -h '$dbHost' '$dbName' -u'$dbUser' -p'$userPass' -v --routines --skip-triggers --single-transaction | gzip -9" > auto_$dbName"_"$DATE.sql.gz && gzip -d auto_$dbName"_"$DATE.sql.gz
+    $sshExec "cd ~;mysqldump -h '$dbHost' '$dbName' -u'$dbUser' -p'$userPass' -v --routines --skip-triggers --single-transaction | gzip -9" > auto_$dbName"_"$DATE.sql.gz && gzip -d auto_$dbName"_"$DATE.sql.gz
     getStatus "SQL download"
 }
 sshCopyId() {
