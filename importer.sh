@@ -87,6 +87,7 @@ selfUpdate() {
     SCRIPTNAME="importer.sh"
     BRANCH="master"
 
+    echo "$(bold)Checking for updates...$(regular)"
     cd $SCRIPTPATH
     if [[ ! -d $SCRIPTPATH/.git ]];then
         echo "$(red)You are running scripts outside GIT. Please clone origin script using 'git clone git@bitbucket.org:absolutewebservices/importer.git' and run inside GIT'$(regular)"
