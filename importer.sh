@@ -101,6 +101,8 @@ selfUpdate() {
         echo "$(green)Updated. Re-run script again!$(regular)" || \
         echo "$(red)Not updated. Try to clone it manually: 'git clone git@bitbucket.org:absolutewebservices/importer.git'$(regular)"
         exit 1
+    else
+        echo "$(bold)The latest version!$(regular)"
     fi
 }
 prepare() {
