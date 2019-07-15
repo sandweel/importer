@@ -152,8 +152,8 @@ getStatus() {
 sshKeygen() {
     echo $awsKey | tr " " "\n" | base64 --decode > /tmp/$tmpKeyName
     chmod 600 /tmp/$tmpKeyName
-    eval `ssh-agent`
-    ssh-add /tmp/$tmpKeyName
+    eval `ssh-agent` &> /dev/null
+    ssh-add /tmp/$tmpKeyName &> /dev/null
     getStatus "Generation ssh key"
     if [[ -z $PORT ]];then
         PORT="22"
@@ -247,7 +247,7 @@ sshCopyId() {
 
 clearData() {
     rm -f /tmp/$tmpKeyName
-    ssh-agent -k
+    ssh-agent -k &> /dev/null
 }
 
 case $1 in
