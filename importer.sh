@@ -205,17 +205,17 @@ mediaGet() {
 
 sqlExport() {
     if [[ $cms == "m1" ]];then
-        sqlDataInfo=`$sshExec "cat $configPath" | grep -A 10 "<default_setup>" | grep "host\|username\|password\|dbname" | awk -F"[" {'print $3'} | awk -F"]" {'print $1'} | head -4 | tr "\n" " "`
-        dbHost=`echo $sqlDataInfo | awk {'print $1'}`
-        dbName=`echo $sqlDataInfo | awk {'print $4'}`
-        dbUser=`echo $sqlDataInfo | awk {'print $2'}`
-        userPass=`echo $sqlDataInfo | awk {'print $3'}`
+        sqlDataInfo=`$sshExec "cat $configPath" | grep -A 10 "<default_setup>" | grep "host\|username\|password\|dbname" | sort | uniq | awk -F"><" {'print $1,$2'}`
+        dbHost=`echo "$sqlDataInfo" | grep host | awk -F"[" {'print $3'} | awk -F"]" {'print $1'}`
+        dbName=`echo "$sqlDataInfo" | grep dbname | awk -F"[" {'print $3'} | awk -F"]" {'print $1'}`
+        dbUser=`echo "$sqlDataInfo" | grep username | awk -F"[" {'print $3'} | awk -F"]" {'print $1'}`
+        userPass=`echo "$sqlDataInfo" | grep password | awk -F"[" {'print $3'} | awk -F"]" {'print $1'}`
     elif [[ $cms == "m2" ]];then
-        sqlDataInfo=`$sshExec "cat $configPath" | grep -A 10 "'default' =>" | grep "host\|username\|password\|dbname" | awk -F"=>" {'print $2'} | awk -F"'" {'print $2'} | head -4 | tr "\n" " "`
-        dbHost=`echo $sqlDataInfo | awk {'print $1'}`
-        dbName=`echo $sqlDataInfo | awk {'print $2'}`
-        dbUser=`echo $sqlDataInfo | awk {'print $3'}`
-        userPass=`echo $sqlDataInfo | awk {'print $4'}`
+        sqlDataInfo=`$sshExec "cat $configPath" | grep -A 10 "'default' =>" | grep "host\|username\|password\|dbname" | sort | uniq | awk -F"'" {'print $2,$4'}`
+        dbHost=`echo "$sqlDataInfo" | grep "host" | awk {'print $2'}`
+        dbName=`echo "$sqlDataInfo" | grep "dbname" | awk {'print $2'}`
+        dbUser=`echo "$sqlDataInfo" | grep "username" |  awk {'print $2'}`
+        userPass=`echo "$sqlDataInfo" | grep "password" |  awk {'print $2'}`
     fi
 
     dbSize=`$sshExec "mysql -h $dbHost -u$dbUser -p$userPass -e \"SELECT table_schema, ROUND(SUM(data_length + index_length) / 1024 / 1024 / 12, 2) AS 'SIZE' FROM information_schema.TABLES where table_schema = '$dbName' GROUP BY table_schema;\"" |  awk {'print $2'} | grep -v SIZE`
