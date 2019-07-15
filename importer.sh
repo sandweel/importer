@@ -205,11 +205,11 @@ mediaGet() {
 
 sqlExport() {
     if [[ $cms == "m1" ]];then
-        sqlDataInfo=`$sshExec "cat $configPath" | grep -A 10 "<default_setup>" | grep "host\|username\|password\|dbname" | sort | uniq | awk -F"><" {'print $1,$2'}`
-        dbHost=`echo "$sqlDataInfo" | grep host | awk -F"[" {'print $3'} | awk -F"]" {'print $1'}`
-        dbName=`echo "$sqlDataInfo" | grep dbname | awk -F"[" {'print $3'} | awk -F"]" {'print $1'}`
-        dbUser=`echo "$sqlDataInfo" | grep username | awk -F"[" {'print $3'} | awk -F"]" {'print $1'}`
-        userPass=`echo "$sqlDataInfo" | grep password | awk -F"[" {'print $3'} | awk -F"]" {'print $1'}`
+        sqlDataInfo=`$sshExec "cat $configPath" | grep -A 10 "<default_setup>" | grep "host\|username\|password\|dbname" | sort | uniq | awk -F'><' {'print $1,$2'} | awk -F'\\\\!\\\\[CDATA' {'print $1,$2'} | awk -F'<' {'print $2,$3,$4,$5'} | awk -F'\\\\[' {'print $1,$2,$3,$4,$5'} | awk -F']]' {'print $1,$2,$3,$4,$5'}`
+        dbHost=`echo "$sqlDataInfo" | grep host | awk {'print $2'}`
+        dbName=`echo "$sqlDataInfo" | grep dbname | awk {'print $2'}`
+        dbUser=`echo "$sqlDataInfo" | grep username | awk {'print $2'}`
+        userPass=`echo "$sqlDataInfo" | grep password | awk {'print $2'}`
     elif [[ $cms == "m2" ]];then
         sqlDataInfo=`$sshExec "cat $configPath" | grep -A 10 "'default' =>" | grep "host\|username\|password\|dbname" | sort | uniq | awk -F"'" {'print $2,$4'}`
         dbHost=`echo "$sqlDataInfo" | grep "host" | awk {'print $2'}`
