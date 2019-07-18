@@ -131,8 +131,13 @@ prepare() {
             sudo apt install sshpass
         elif [[ $osType == "OSX" ]];then
             echo "$(bold)SSHPASS is missing. Trying to install...$(regular)"
-            brew install sshpass
+            brew install https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb
         fi
+    fi
+    if [[ $(echo $SHELL) != "/bin/bash" ]];then
+        grepKey=2
+    else
+        grepKey=1
     fi
 }
 
@@ -205,13 +210,13 @@ mediaGet() {
 
 sqlExport() {
     if [[ $cms == "m1" ]];then
-        sqlDataInfo=`$sshExec "cat $configPath" | grep -m 1 -A 10 "<default_setup>" | grep "host\|username\|password\|dbname" | sort | uniq | awk -F'><' {'print $1,$2'} | awk -F'\\\\!\\\\[CDATA' {'print $1,$2'} | awk -F'<' {'print $2,$3,$4,$5'} | awk -F'\\\\[' {'print $1,$2,$3,$4,$5'} | awk -F']]' {'print $1,$2,$3,$4,$5'}`
+        sqlDataInfo=`$sshExec "cat $configPath" | grep -m $grepKey -A 4 "<default_setup>" | grep "host\|username\|password\|dbname" | sort | uniq | awk -F'><' {'print $1,$2'} | awk -F'\\\\!\\\\[CDATA' {'print $1,$2'} | awk -F'<' {'print $2,$3,$4,$5'} | awk -F'\\\\[' {'print $1,$2,$3,$4,$5'} | awk -F']]' {'print $1,$2,$3,$4,$5'}`
         dbHost=`echo "$sqlDataInfo" | grep host | awk {'print $2'}`
         dbName=`echo "$sqlDataInfo" | grep dbname | awk {'print $2'}`
         dbUser=`echo "$sqlDataInfo" | grep username | awk {'print $2'}`
         userPass=`echo "$sqlDataInfo" | grep password | awk {'print $2'}`
     elif [[ $cms == "m2" ]];then
-        sqlDataInfo=`$sshExec "cat $configPath" | grep -m 1 -A 10 "'default' =>" | grep "host\|username\|password\|dbname" | sort | uniq | awk -F"'" {'print $2,$4'}`
+        sqlDataInfo=`$sshExec "cat $configPath" | grep -m $grepKey -A 4 "'default' =>" | grep "host\|username\|password\|dbname" | sort | uniq | awk -F"'" {'print $2,$4'}`
         dbHost=`echo "$sqlDataInfo" | grep "host" | awk {'print $2'}`
         dbName=`echo "$sqlDataInfo" | grep "dbname" | awk {'print $2'}`
         dbUser=`echo "$sqlDataInfo" | grep "username" |  awk {'print $2'}`
