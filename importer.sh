@@ -134,7 +134,7 @@ prepare() {
             brew install https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb
         fi
     fi
-    if [[ $(echo $SHELL) != "/bin/bash" ]];then
+    if [[ $osType == "OSX" ]];then
         grepKey=2
     else
         grepKey=1
