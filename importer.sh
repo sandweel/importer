@@ -198,13 +198,13 @@ cmsDetector() {
     fi
 }
 mediaGet() {
-    mediaSize=`$sshExec "du -sb $mediaPath/media" | awk {'print $1'}`
+    mediaSize=`$sshExec "du -sb $mediaPath/media/" | awk {'print $1'}`
     declare -i mistake=$mediaSize/100
     declare -i percent=$mistake*16
     declare -i pvMediaSize=$mediaSize-$percent
     hMediaSize=$(echo "$pvMediaSize/1073741824" | bc -l | awk '{printf "%f", $0}' | cut -c-4)
     echo -e "\nMedia size - $hMediaSize""G"
-    $sshExec "cd $mediaPath;tar --exclude='cache' -cf - media" | pv -b -c -p -r -s $pvMediaSize > $USER'_media.tar'
+    $sshExec "cd $mediaPath;tar --exclude='cache' -cf - media/*" | pv -b -c -p -r -s $pvMediaSize > $USER'_media.tar'
     getStatus "Media download"
 }
 
