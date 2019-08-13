@@ -171,9 +171,9 @@ sshKeygen() {
     read -p "Enter ssh login: " USER
     read -p "Enter ssh password or leave empty: " PASSWORD
     if [[ -z $PASSWORD ]];then
-        sshExec="ssh $USER@$HOST -i /tmp/$tmpKeyName -p $PORT"
+        sshExec="ssh -oStrictHostKeyChecking=no $USER@$HOST -i /tmp/$tmpKeyName -p $PORT"
     else
-        sshExec="sshpass -p$PASSWORD ssh $USER@$HOST -p $PORT"
+        sshExec="sshpass -p$PASSWORD ssh -oStrictHostKeyChecking=no $USER@$HOST -p $PORT"
     fi
 }
 
