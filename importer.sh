@@ -204,7 +204,7 @@ mediaGet() {
     declare -i pvMediaSize=$mediaSize-$percent
     hMediaSize=$(echo "$pvMediaSize/1073741824" | bc -l | awk '{printf "%f", $0}' | cut -c-4)
     echo -e "\nMedia size - $hMediaSize""G"
-    $sshExec "cd $mediaPath;tar --exclude='cache' -cf - media/*" | pv -b -c -p -r -s $pvMediaSize > $USER'_media.tar'
+    $sshExec "cd $mediaPath;tar --exclude='cache' -zcf - media/*" | pv -b -c -p -r -s $pvMediaSize > $USER'_media.tar.gz'
     getStatus "Media download"
 }
 
