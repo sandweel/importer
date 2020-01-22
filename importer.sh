@@ -216,7 +216,7 @@ sqlExport() {
         dbUser=`echo "$sqlDataInfo" | grep username | awk {'print $2'}`
         userPass=`echo "$sqlDataInfo" | grep password | awk {'print $2'}`
     elif [[ $cms == "m2" ]];then
-        sqlDataInfo=`$sshExec "cat $configPath" | grep -m $grepKey -A 10 "'db' =>" | grep -m $grepKey -A 6 "'default' =>" | grep "host\|username\|password\|dbname" | sort | uniq | awk -F"'" {'print $2,$4'}`
+        sqlDataInfo=`$sshExec "cat $configPath" | grep -m $grepKey -A 18 "'db' =>" | grep -m $grepKey -A 6 "'default' =>" | grep "host\|username\|password\|dbname" | sort | uniq | awk -F"'" {'print $2,$4'}`
         dbHost=`echo "$sqlDataInfo" | grep "host" | awk {'print $2'}`
         dbName=`echo "$sqlDataInfo" | grep "dbname" | awk {'print $2'}`
         dbUser=`echo "$sqlDataInfo" | grep "username" |  awk {'print $2'}`
