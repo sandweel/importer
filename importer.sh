@@ -271,8 +271,8 @@ case $1 in
     "both")
         sshKeygen
         cmsDetector
-        mediaGet
         sqlExport
+        mediaGet
         clearData
     ;;
     "ssh")
