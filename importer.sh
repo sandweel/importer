@@ -106,14 +106,16 @@ selfUpdate() {
     fi
 }
 prepare() {
-    sshPass=`which sshpass`
-    pvFile=`which pv`
+    sshPass=`which sshpass 2>/dev/null`
+    pvFile=`which pv 2>/dev/null`
 
     if [[ `uname | grep -c [Ll]inux 2>/dev/null` == "1" ]];then
         osType="Linux"
-
     elif [[ `uname | grep -c [Dd]arwin 2>/dev/null` == "1" ]];then
         osType="OSX"
+    else
+        echo "$(red)Not supported OS: $(uname)"
+        exit 1
     fi
 
     if [ ! -f "$pvFile" ]; then
@@ -155,7 +157,8 @@ getStatus() {
 
 
 sshKeygen() {
-    echo $awsKey | tr " " "\n" | base64 --decode > /tmp/$tmpKeyName
+    #echo $awsKey | tr " " "\n" | base64 --decode > /tmp/$tmpKeyName
+    cp ~/.ssh/id_rsa /tmp/$tmpKeyName
     chmod 600 /tmp/$tmpKeyName
     eval `ssh-agent` &> /dev/null
     ssh-add /tmp/$tmpKeyName &> /dev/null
@@ -175,6 +178,8 @@ sshKeygen() {
     else
         sshExec="sshpass -p$PASSWORD ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=no $USER@$HOST -p $PORT"
     fi
+    $sshExec "echo 'true' > /dev/null"
+    getStatus "SSH session open"
 }
 
 cmsDetector() {
@@ -193,7 +198,7 @@ cmsDetector() {
         mediaPath="$cmsPath/pub"
         configPath="$cmsPath/app/etc/env.php"
     else
-        echo "$(red)###Error: Unknown CMS!$(regular)"
+        echo "$(red)###Error: Couldn't find config file inside directory: $(bold)$cmsPath$(regular). Double check project directory!$(regular)"
         exit 1
     fi
 }
