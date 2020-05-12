@@ -82,7 +82,7 @@ bold()
 }
 
 selfUpdate() {
-    SCRIPT=$(readlink -f "$0")
+    SCRIPT=$0
     SCRIPTPATH=$(dirname "$SCRIPT")
     SCRIPTNAME="importer.sh"
     BRANCH="master"
