@@ -228,9 +228,13 @@ sqlExport() {
         userPass=`echo "$sqlDataInfo" | grep "password" |  awk {'print $2'}`
     fi
 
-    dbSize=`$sshExec "mysql -h $dbHost -u$dbUser -p$userPass -e \"SELECT table_schema, ROUND(SUM(data_length + index_length) / 1024 / 1024 / 12, 2) AS 'SIZE' FROM information_schema.TABLES where table_schema = '$dbName' GROUP BY table_schema;\"" |  awk {'print $2'} | grep -v SIZE`
+    if [[ ! -z $userPass ]];then
+        mysqlPassKey="-p$userPass"
+    fi
+
+    dbSize=`$sshExec "mysql -h $dbHost -u$dbUser $mysqlPassKey -e \"SELECT table_schema, ROUND(SUM(data_length + index_length) / 1024 / 1024 / 12, 2) AS 'SIZE' FROM information_schema.TABLES where table_schema = '$dbName' GROUP BY table_schema;\"" |  awk {'print $2'} | grep -v SIZE`
     echo "$(bold)Estimated compressed db file size: $dbSize""M$(regular)"
-    $sshExec "cd ~;mysqldump -h '$dbHost' '$dbName' -u'$dbUser' -p'$userPass' --routines --skip-triggers --single-transaction 2>/dev/null | gzip -9" | pv -b -c -r > auto_$dbName"_"$DATE.sql.gz
+    $sshExec "cd ~;mysqldump -h '$dbHost' '$dbName' -u'$dbUser' $mysqlPassKey --routines --skip-triggers --single-transaction 2>/dev/null | gzip -9" | pv -b -c -r > auto_$dbName"_"$DATE.sql.gz
 
     echo "$(bold)Decompressing...$(bold)"
     gzip -d auto_$dbName"_"$DATE.sql.gz
