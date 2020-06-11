@@ -106,14 +106,16 @@ selfUpdate() {
     fi
 }
 prepare() {
-    sshPass=`which sshpass`
-    pvFile=`which pv`
+    sshPass=`which sshpass 2>/dev/null`
+    pvFile=`which pv 2>/dev/null`
 
     if [[ `uname | grep -c [Ll]inux 2>/dev/null` == "1" ]];then
         osType="Linux"
-
     elif [[ `uname | grep -c [Dd]arwin 2>/dev/null` == "1" ]];then
         osType="OSX"
+    else
+        echo "$(red)Not supported OS: $(uname)"
+        exit 1
     fi
 
     if [ ! -f "$pvFile" ]; then
@@ -155,7 +157,8 @@ getStatus() {
 
 
 sshKeygen() {
-    echo $awsKey | tr " " "\n" | base64 --decode > /tmp/$tmpKeyName
+    #echo $awsKey | tr " " "\n" | base64 --decode > /tmp/$tmpKeyName
+    cp ~/.ssh/id_rsa /tmp/$tmpKeyName
     chmod 600 /tmp/$tmpKeyName
     eval `ssh-agent` &> /dev/null
     ssh-add /tmp/$tmpKeyName &> /dev/null
@@ -171,10 +174,12 @@ sshKeygen() {
     read -p "Enter ssh login: " USER
     read -p "Enter ssh password or leave empty: " PASSWORD
     if [[ -z $PASSWORD ]];then
-        sshExec="ssh -o StrictHostKeyChecking=no $USER@$HOST -i /tmp/$tmpKeyName -p $PORT"
+        sshExec="ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no $USER@$HOST -i /tmp/$tmpKeyName -p $PORT"
     else
-        sshExec="sshpass -p$PASSWORD ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=no $USER@$HOST -p $PORT"
+        sshExec="sshpass -p$PASSWORD ssh -o PasswordAuthentication=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=no $USER@$HOST -p $PORT"
     fi
+    $sshExec "echo 'true' > /dev/null"
+    getStatus "SSH session open"
 }
 
 cmsDetector() {
@@ -193,7 +198,7 @@ cmsDetector() {
         mediaPath="$cmsPath/pub"
         configPath="$cmsPath/app/etc/env.php"
     else
-        echo "$(red)###Error: Unknown CMS!$(regular)"
+        echo "$(red)###Error: Couldn't find config file inside directory: $(bold)$cmsPath$(regular). Double check project directory!$(regular)"
         exit 1
     fi
 }
@@ -223,9 +228,13 @@ sqlExport() {
         userPass=`echo "$sqlDataInfo" | grep "password" |  awk {'print $2'}`
     fi
 
-    dbSize=`$sshExec "mysql -h $dbHost -u$dbUser -p$userPass -e \"SELECT table_schema, ROUND(SUM(data_length + index_length) / 1024 / 1024 / 12, 2) AS 'SIZE' FROM information_schema.TABLES where table_schema = '$dbName' GROUP BY table_schema;\"" |  awk {'print $2'} | grep -v SIZE`
+    if [[ ! -z $userPass ]];then
+        mysqlPassKey="-p$userPass"
+    fi
+
+    dbSize=`$sshExec "mysql -h $dbHost -u$dbUser $mysqlPassKey -e \"SELECT table_schema, ROUND(SUM(data_length + index_length) / 1024 / 1024 / 12, 2) AS 'SIZE' FROM information_schema.TABLES where table_schema = '$dbName' GROUP BY table_schema;\"" |  awk {'print $2'} | grep -v SIZE`
     echo "$(bold)Estimated compressed db file size: $dbSize""M$(regular)"
-    $sshExec "cd ~;mysqldump -h '$dbHost' '$dbName' -u'$dbUser' -p'$userPass' --routines --skip-triggers --single-transaction 2>/dev/null | gzip -9" | pv -b -c -r > auto_$dbName"_"$DATE.sql.gz
+    $sshExec "cd ~;mysqldump -h '$dbHost' '$dbName' -u'$dbUser' $mysqlPassKey --routines --skip-triggers --single-transaction 2>/dev/null | gzip -9" | pv -b -c -r > auto_$dbName"_"$DATE.sql.gz
 
     echo "$(bold)Decompressing...$(bold)"
     gzip -d auto_$dbName"_"$DATE.sql.gz
@@ -271,8 +280,8 @@ case $1 in
     "both")
         sshKeygen
         cmsDetector
-        mediaGet
         sqlExport
+        mediaGet
         clearData
     ;;
     "ssh")
