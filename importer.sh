@@ -210,7 +210,7 @@ mediaGet() {
     hMediaSize=$(echo "$pvMediaSize/1073741824" | bc -l | awk '{printf "%f", $0}' | cut -c-4)
     echo -e "\nMedia size - $hMediaSize""G"
     $sshExec "cd $mediaPath;tar --exclude='cache' -zcf - media/*" | pv -b -c -p -r -s $pvMediaSize > $USER'_media.tar.gz'
-    getStatus "Media download"
+    getStatus "Media download. Media archive file: $USER'_media.tar.gz'"
 }
 
 sqlExport() {
@@ -238,7 +238,7 @@ sqlExport() {
 
     echo "$(bold)Decompressing...$(bold)"
     gzip -d auto_$dbName"_"$DATE.sql.gz
-    getStatus "SQL download"
+    getStatus "SQL download. SQL archive file: auto_$dbName'_'$DATE.sql.gz"
 }
 sshCopyId() {
     if ! stat ~/.ssh/id_rsa.pub &>/dev/null
