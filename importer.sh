@@ -229,7 +229,7 @@ sqlExport() {
     fi
 
     if [[ ! -z $userPass ]];then
-        mysqlPassKey="-p$userPass"
+        mysqlPassKey="-p'$userPass'"
     fi
 
     dbSize=`$sshExec "mysql -h $dbHost -u$dbUser $mysqlPassKey -e \"SELECT table_schema, ROUND(SUM(data_length + index_length) / 1024 / 1024 / 12, 2) AS 'SIZE' FROM information_schema.TABLES where table_schema = '$dbName' GROUP BY table_schema;\"" |  awk {'print $2'} | grep -v SIZE`
