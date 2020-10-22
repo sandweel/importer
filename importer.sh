@@ -158,7 +158,16 @@ getStatus() {
 
 sshKeygen() {
     #echo $awsKey | tr " " "\n" | base64 --decode > /tmp/$tmpKeyName
-    cp ~/.ssh/id_rsa /tmp/$tmpKeyName
+    sshKeys="id_rsa id_dsa rsa"
+    for key in $sshKeys
+    do
+        if [[ -f "$HOME/.ssh/$key" ]];then
+            sshKey="$HOME/.ssh/$key"
+            break
+        fi
+    done
+
+    cp $sshKey /tmp/$tmpKeyName
     chmod 600 /tmp/$tmpKeyName
     eval `ssh-agent` &> /dev/null
     ssh-add /tmp/$tmpKeyName &> /dev/null
@@ -287,6 +296,9 @@ case $1 in
     "ssh")
         sshCopyId
     ;;
+#    "test")
+#        sshKeygen
+#    ;;
     *)
         echo -e "Usage: /bin/bash $0 [media|sql|both|ssh] [server ip address] [ssh port (default 22)]\n"
         echo "media - copying media files in archive to the local node"
