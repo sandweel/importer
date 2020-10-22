@@ -158,20 +158,6 @@ getStatus() {
 
 sshKeygen() {
     #echo $awsKey | tr " " "\n" | base64 --decode > /tmp/$tmpKeyName
-    sshKeys="id_rsa id_dsa rsa"
-    for key in $sshKeys
-    do
-        if [[ -f "$HOME/.ssh/$key" ]];then
-            sshKey="$HOME/.ssh/$key"
-            break
-        fi
-    done
-
-    cp $sshKey /tmp/$tmpKeyName
-    chmod 600 /tmp/$tmpKeyName
-    eval `ssh-agent` &> /dev/null
-    ssh-add /tmp/$tmpKeyName &> /dev/null
-    getStatus "Generation ssh key"
     if [[ -z $PORT ]];then
         PORT="22"
     fi
@@ -183,6 +169,19 @@ sshKeygen() {
     read -p "Enter ssh login: " USER
     read -p "Enter ssh password or leave empty: " PASSWORD
     if [[ -z $PASSWORD ]];then
+        sshKeys="id_rsa id_dsa rsa"
+        for key in $sshKeys
+        do
+            if [[ -f "$HOME/.ssh/$key" ]];then
+                sshKey="$HOME/.ssh/$key"
+                break
+            fi
+        done
+        cp $sshKey /tmp/$tmpKeyName
+        chmod 600 /tmp/$tmpKeyName
+        eval `ssh-agent` &> /dev/null
+        ssh-add /tmp/$tmpKeyName &> /dev/null
+        getStatus "Generation ssh key"
         sshExec="ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no $USER@$HOST -i /tmp/$tmpKeyName -p $PORT"
     else
         sshExec="sshpass -p$PASSWORD ssh -o PasswordAuthentication=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=no $USER@$HOST -p $PORT"
