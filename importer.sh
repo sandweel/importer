@@ -211,6 +211,7 @@ cmsDetector() {
     fi
 }
 mediaGet() {
+    echo "Calculation media directory size..."
     mediaSize=`$sshExec "du -sb $mediaPath/media/" | awk {'print $1'}`
     declare -i mistake=$mediaSize/100
     declare -i percent=$mistake*16
@@ -220,7 +221,17 @@ mediaGet() {
     $sshExec "cd $mediaPath;tar --exclude='cache' -zcf - media/*" | pv -b -c -p -r -s $pvMediaSize > $USER'_media.tar.gz'
     getStatus "Media download. Media archive file: $USER'_media.tar.gz'"
 }
-
+publicDataGet() {
+    echo "Calculation project directory size..."
+    publicDataSize=`$sshExec "du -sb $cmsPath/" | awk {'print $1'}`
+    declare -i mistake=$publicDataSize/100
+    declare -i percent=$mistake*16
+    declare -i pvPublicDataSize=$publicDataSize-$percent
+    hPublicDataSize=$(echo "$pvPublicDataSize/1073741824" | bc -l | awk '{printf "%f", $0}' | cut -c-4)
+    echo -e "\nPublic data size - $hPublicDataSize""G"
+    $sshExec "cd $cmsPath;tar --exclude='cache' -zcf - ./" | pv -b -c -p -r -s $pvPublicDataSize > $USER'_public.tar.gz'
+    getStatus "Media download. Media archive file: $USER'_public.tar.gz'"
+}
 sqlExport() {
     if [[ $cms == "m1" ]];then
         sqlDataInfo=`$sshExec "cat $configPath" | grep -m $grepKey -A 6 "<default_setup>" | grep "host\|username\|password\|dbname" | sort | uniq | grep -v '\!--' | awk -F'><' {'print $1,$2'} | awk -F'\\\\!\\\\[CDATA' {'print $1,$2'} | awk -F'<' {'print $2,$3,$4,$5'} | awk -F'\\\\[' {'print $1,$2,$3,$4,$5'} | awk -F']]' {'print $1,$2,$3,$4,$5'}`
@@ -279,6 +290,12 @@ case $1 in
         mediaGet
         clearData
     ;;
+    "public")
+        sshKeygen
+        cmsDetector
+        publicDataGet
+        clearData
+    ;;
     "sql")
         sshKeygen
         cmsDetector
@@ -299,8 +316,9 @@ case $1 in
 #        sshKeygen
 #    ;;
     *)
-        echo -e "Usage: /bin/bash $0 [media|sql|both|ssh] [server ip address] [ssh port (default 22)]\n"
+        echo -e "Usage: /bin/bash $0 [media|public|sql|both|ssh] [server ip address] [ssh port (default 22)]\n"
         echo "media - copying media files in archive to the local node"
+        echo "public - copying root project directory (public_html) in archive to the local node"
         echo "sql - create sql dump and download to the local node"
         echo "both - download media and sql dump to the local node"
         echo -e "ssh - copy ssh public key to the remote node\n"
