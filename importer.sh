@@ -217,19 +217,38 @@ mediaGet() {
     declare -i percent=$mistake*16
     declare -i pvMediaSize=$mediaSize-$percent
     hMediaSize=$(echo "$pvMediaSize/1073741824" | bc -l | awk '{printf "%f", $0}' | cut -c-4)
-    echo -e "\nMedia size - $hMediaSize""G"
+    if [[ $hMediaSize == "0,00" ]];then
+        echo -e "\nMedia size - less then 1G"
+    else
+        echo -e "\nMedia size - $hMediaSize""G"
+    fi
     $sshExec "cd $mediaPath;tar --exclude='cache' -zcf - media/*" | pv -b -c -p -r -s $pvMediaSize > $USER'_media.tar.gz'
     getStatus "Media download. Media archive file: $USER'_media.tar.gz'"
 }
 publicDataGet() {
+    read -p "Download with media files?(y/n): " mediaSkip
     echo "Calculation project directory size..."
-    publicDataSize=`$sshExec "du -sb $cmsPath/" | awk {'print $1'}`
+    if [[ $mediaSkip == "y" ]];then
+        publicDataSize=`$sshExec "du -sb $cmsPath/" | awk {'print $1'}`
+        tarExclude="--exclude='var/log' --exclude='cache'"
+    elif [[ $mediaSkip == "n" ]];then
+        publicDataSize=`$sshExec "du -sb --exclude='media' $cmsPath/ " | awk {'print $1'}`
+        tarExclude="--exclude='var/log' --exclude='cache' --exclude='media'"
+    else
+        echo "Enter y or n. Aborting..."
+    fi
+
+
     declare -i mistake=$publicDataSize/100
     declare -i percent=$mistake*16
     declare -i pvPublicDataSize=$publicDataSize-$percent
     hPublicDataSize=$(echo "$pvPublicDataSize/1073741824" | bc -l | awk '{printf "%f", $0}' | cut -c-4)
-    echo -e "\nPublic data size - $hPublicDataSize""G"
-    $sshExec "cd $cmsPath;tar --exclude='cache' -zcf - ./" | pv -b -c -p -r -s $pvPublicDataSize > $USER'_public.tar.gz'
+    if [[ $hPublicDataSize == "0,00" ]];then
+        echo -e "\nPublic data size - less then 1G"
+    else
+        echo -e "\nPublic data size - $hPublicDataSize""G"
+    fi
+    $sshExec "cd $cmsPath;tar $tarExclude -zcf - ./" | pv -b -c -p -r -s $pvPublicDataSize > $USER'_public.tar.gz'
     getStatus "Media download. Media archive file: $USER'_public.tar.gz'"
 }
 sqlExport() {
