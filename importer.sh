@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 awsKey="
 LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlKS1FJQkFBS0NBZ0VBcjdDNTBMYUdP
@@ -81,6 +81,15 @@ bold()
     printf "\e[1m"
 }
 
+getStatus() {
+    if [[ $? != 0 ]];then
+        echo "$(red)$@ failed!$(regular)"
+        exit 1
+    else
+        echo "$(green)$@ finished successfully!$(regular)"
+    fi
+}
+
 selfUpdate() {
     SCRIPT=$0
     SCRIPTPATH=$(dirname "$SCRIPT")
@@ -110,30 +119,44 @@ prepare() {
     pvFile=`which pv 2>/dev/null`
 
     if [[ `uname | grep -c [Ll]inux 2>/dev/null` == "1" ]];then
+        bashShell="/bin/bash"
         osType="Linux"
     elif [[ `uname | grep -c [Dd]arwin 2>/dev/null` == "1" ]];then
+        bashShell="/usr/local/bin/bash"
         osType="OSX"
     else
         echo "$(red)Not supported OS: $(uname)"
         exit 1
     fi
 
+    if [[ $osType == "OSX" ]];
+        if [ ! -f $bashShell ];then
+            echo "$(bold)Bash 4+ is missing. Trying to install...$(regular)"
+            brew install bash
+            getStatus "Shell bash installation"
+        fi
+    fi
+
     if [ ! -f "$pvFile" ]; then
         if [[ $osType == "Linux" ]];then
             echo "$(bold)PV is missing. Trying to install...$(regular)"
             sudo apt install pv
+            getStatus "PV installation"
         elif [[ $osType == "OSX" ]];then
             echo "$(bold)PV is missing. Trying to install...$(regular)"
             brew install pv
+            getStatus "PV installation"
         fi
     fi
     if [ ! -f "$sshPass" ]; then
         if [[ $osType == "Linux" ]];then
             echo "$(bold)SSHPASS is missing. Trying to install...$(regular)"
             sudo apt install sshpass
+            getStatus "SSHPASS installation"
         elif [[ $osType == "OSX" ]];then
             echo "$(bold)SSHPASS is missing. Trying to install...$(regular)"
             brew install https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb
+            getStatus "SSHPASS installation"
         fi
     fi
     if [[ $osType == "OSX" ]];then
@@ -146,14 +169,7 @@ prepare() {
 selfUpdate
 prepare
 
-getStatus() {
-    if [[ $? != 0 ]];then
-        echo "$(red)$@ failed!$(regular)"
-        exit 1
-    else
-        echo "$(green)$@ finished successfully!$(regular)"
-    fi
-}
+
 
 
 sshKeygen() {
@@ -333,7 +349,7 @@ case $1 in
 #        sshKeygen
 #    ;;
     *)
-        echo -e "Usage: /bin/bash $0 [media|public|sql|both|ssh] [server ip address] [ssh port (default 22)]\n"
+        echo -e "Usage: bash $0 [media|public|sql|both|ssh] [server ip address] [ssh port (default 22)]\n"
         echo "media - copying media files in archive to the local node"
         echo "public - copying root project directory (public_html) in archive to the local node"
         echo "sql - create sql dump and download to the local node"
