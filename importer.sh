@@ -201,10 +201,12 @@ cmsDetector() {
         cms="m1"
         mediaPath="$cmsPath"
         configPath="$cmsPath/app/etc/local.xml"
+        configPathFile="app/etc/local.xml"
     elif [[ $cConf == "2" ]];then
         cms="m2"
         mediaPath="$cmsPath/pub"
         configPath="$cmsPath/app/etc/env.php"
+        configPathFile="app/etc/env.php"
     else
         echo "$(red)###Error: Couldn't find config file inside directory: $(bold)$cmsPath$(regular). Double check project directory!$(regular)"
         exit 1
@@ -234,17 +236,24 @@ publicDataGet() {
 }
 sqlExport() {
     if [[ $cms == "m1" ]];then
-        sqlDataInfo=`$sshExec "cat $configPath" | grep -m $grepKey -A 6 "<default_setup>" | grep "host\|username\|password\|dbname" | sort | uniq | grep -v '\!--' | awk -F'><' {'print $1,$2'} | awk -F'\\\\!\\\\[CDATA' {'print $1,$2'} | awk -F'<' {'print $2,$3,$4,$5'} | awk -F'\\\\[' {'print $1,$2,$3,$4,$5'} | awk -F']]' {'print $1,$2,$3,$4,$5'}`
-        dbHost=`echo "$sqlDataInfo" | grep host | awk {'print $2'}`
-        dbName=`echo "$sqlDataInfo" | grep dbname | awk {'print $2'}`
-        dbUser=`echo "$sqlDataInfo" | grep username | awk {'print $2'}`
-        userPass=`echo "$sqlDataInfo" | grep password | awk {'print $2'}`
+        declare -A sqlDataInfo=$($sshExec "cd $cmsPath; php -r \"\\\$a=file_get_contents('$configPathFile'); \\\$p=xml_parser_create(); xml_parse_into_struct(\\\$p, \\\$a, \\\$vals, \\\$index); print('( [dbhost]='.\\\$vals[(\\\$index['HOST'][0])]['value'].' ');print('[dbname]='.\\\$vals[(\\\$index['DBNAME'][0])]['value'].' ');print('[dbuser]='.\\\$vals[(\\\$index['USERNAME'][0])]['value'].' ');print('[dbpass]='.\\\$vals[(\\\$index['PASSWORD'][0])]['value'].' )');\"")
+        echo <<EOF 1>/dev/null
+Fixing MC syntax lighting"
+EOF
+        dbHost=$(echo ${sqlDataInfo[dbhost]})
+        dbName=$(echo ${sqlDataInfo[dbname]})
+        dbUser=$(echo ${sqlDataInfo[dbuser]})
+        userPass=$(echo ${sqlDataInfo[dbpass]})
     elif [[ $cms == "m2" ]];then
-        sqlDataInfo=`$sshExec "cat $configPath" | grep -m $grepKey -A 18 "'db' =>" | grep -m $grepKey -A 6 "'default' =>" | grep "host\|username\|password\|dbname" | sort | uniq | awk -F"'" {'print $2,$4'}`
-        dbHost=`echo "$sqlDataInfo" | grep "host" | awk {'print $2'}`
-        dbName=`echo "$sqlDataInfo" | grep "dbname" | awk {'print $2'}`
-        dbUser=`echo "$sqlDataInfo" | grep "username" |  awk {'print $2'}`
-        userPass=`echo "$sqlDataInfo" | grep "password" |  awk {'print $2'}`
+        declare -A sqlDataInfo=$($sshExec "cd $cmsPath; php -r \"\\\$a = require('$configPathFile'); print '( [dbhost]='.\\\$a['db']['connection']['default']['host']; print ' [dbname]='.\\\$a['db']['connection']['default']['dbname']; print ' [dbuser]='.\\\$a['db']['connection']['default']['username']; print ' [dbpass]='.\\\$a['db']['connection']['default']['password'] . ' )';\"")
+        echo <<EOF 1>/dev/null
+Fixing MC syntax lighting"
+EOF
+        dbHost=$(echo ${sqlDataInfo[dbhost]})
+        dbName=$(echo ${sqlDataInfo[dbname]})
+        dbUser=$(echo ${sqlDataInfo[dbuser]})
+        userPass=$(echo ${sqlDataInfo[dbpass]})
+
     fi
 
     if [[ ! -z $userPass ]];then
@@ -253,7 +262,7 @@ sqlExport() {
 
     dbSize=`$sshExec "mysql -h $dbHost -u$dbUser $mysqlPassKey -e \"SELECT table_schema, ROUND(SUM(data_length + index_length) / 1024 / 1024 / 12, 2) AS 'SIZE' FROM information_schema.TABLES where table_schema = '$dbName' GROUP BY table_schema;\"" |  awk {'print $2'} | grep -v SIZE`
     echo "$(bold)Estimated compressed db file size: $dbSize""M$(regular)"
-    $sshExec "cd ~;mysqldump -h '$dbHost' '$dbName' -u'$dbUser' $mysqlPassKey --routines --skip-triggers --single-transaction 2>/dev/null | gzip -9" | pv -b -c -r > auto_$dbName"_"$DATE.sql.gz
+    $sshExec "cd ~;mysqldump -h '$dbHost' '$dbName' -u'$dbUser' $mysqlPassKey --no-tablespaces --routines --skip-triggers --single-transaction 2>/dev/null | gzip -9" | pv -b -c -r > auto_$dbName"_"$DATE.sql.gz
 
     echo "$(bold)Decompressing...$(bold)"
     gzip -d auto_$dbName"_"$DATE.sql.gz
@@ -281,6 +290,11 @@ sshCopyId() {
 clearData() {
     rm -f /tmp/$tmpKeyName
     ssh-agent -k &> /dev/null
+}
+
+showVersion() {
+    version="2.0.1"
+    echo "$(bold)Importer version is $version $(regular)"
 }
 
 case $1 in
@@ -311,6 +325,9 @@ case $1 in
     ;;
     "ssh")
         sshCopyId
+    ;;
+    version|-v|--version)
+        showVersion
     ;;
 #    "test")
 #        sshKeygen
