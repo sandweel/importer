@@ -129,11 +129,17 @@ prepare() {
         exit 1
     fi
 
-    if [[ $osType == "OSX" ]];
+    if [[ $osType == "OSX" ]];then
         if [ ! -f $bashShell ];then
             echo "$(bold)Bash 4+ is missing. Trying to install...$(regular)"
             brew install bash
             getStatus "Shell bash installation"
+            echo "$(bold)Need to re-run the script$(regular)"
+            exit 0
+        fi
+        if [[ $(which bash) != "/usr/local/bin/bash" ]];then
+            echo -e "$(red)###Error: Your $SHELL is not valid for importer.\nPlease use: $bashShell $0$(regular)"
+            exit 1
         fi
     fi
 
