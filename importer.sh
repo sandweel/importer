@@ -123,6 +123,7 @@ prepare() {
         osType="Linux"
     elif [[ `uname | grep -c [Dd]arwin 2>/dev/null` == "1" ]];then
         bashShell="/usr/local/bin/bash"
+        bashShellArm="/opt/homebrew/bin/bash"
         osType="OSX"
     else
         echo "$(red)Not supported OS: $(uname)"
@@ -130,14 +131,14 @@ prepare() {
     fi
 
     if [[ $osType == "OSX" ]];then
-        if [ ! -f $bashShell ];then
+        if [ ! -f $bashShell ] && [ ! -f $bashShellArm ];then
             echo "$(bold)Bash 4+ is missing. Trying to install...$(regular)"
             brew install bash
             getStatus "Shell bash installation"
             echo "$(bold)Need to re-run the script$(regular)"
             exit 0
         fi
-        if [[ $(which bash) != "/usr/local/bin/bash" ]];then
+        if [[ $(which bash) != "/usr/local/bin/bash" || $(which bash) != "/opt/homebrew/bin/bash" ]];then
             echo -e "$(red)###Error: Script interpreter $(which bash) is not valid for importer.\nPlease use: $bashShell $0$(regular)"
             exit 1
         fi
