@@ -138,10 +138,10 @@ prepare() {
             echo "$(bold)Need to re-run the script$(regular)"
             exit 0
         fi
-        if [[ $(which bash) != "/usr/local/bin/bash" || $(which bash) != "/opt/homebrew/bin/bash" ]];then
-            echo -e "$(red)###Error: Script interpreter $(which bash) is not valid for importer.\nPlease use: $bashShell $0$(regular)"
-            exit 1
-        fi
+#        if [[ $(which bash) != "/usr/local/bin/bash" || $(which bash) != "/opt/homebrew/bin/bash" ]];then
+#            echo -e "$(red)###Error: Script interpreter $(which bash) is not valid for importer.\nPlease use: $bashShell $0$(regular)"
+#            exit 1
+#        fi
     fi
 
     if [ ! -f "$pvFile" ]; then
