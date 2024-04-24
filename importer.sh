@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-tmpKeyName="aws_insecure_key"
+tmpKeyName="insecure_key"
 HOST="$2"
 PORT="$3"
 DATE=`date +%d_%m-%H_%M`
@@ -40,7 +40,7 @@ selfUpdate() {
     echo "$(bold)Checking for updates...$(regular)"
     cd $SCRIPTPATH
     if [[ ! -d $SCRIPTPATH/.git ]];then
-        echo "$(red)You are running scripts outside GIT. Please clone origin script using 'git clone git@bitbucket.org:absolutewebservices/importer.git' and run inside GIT'$(regular)"
+        echo "$(red)You are running scripts outside GIT. Please clone origin script using 'git clone git@github.com:sandweel/importer.git' and run inside GIT'$(regular)"
         exit 1
     fi
     git fetch &>/dev/null
@@ -49,7 +49,7 @@ selfUpdate() {
         echo "Found a new version of me, updating myself..."
         git pull --force &>/dev/null && \
         echo "$(green)Updated. Re-run script again!$(regular)" || \
-        echo "$(red)Not updated. Try to clone it manually: 'git clone git@bitbucket.org:absolutewebservices/importer.git'$(regular)"
+        echo "$(red)Not updated. Try to clone it manually: 'git clone git@github.com:sandweel/importer.git'$(regular)"
         exit 1
     else
         echo "$(bold)The latest version!$(regular)"
@@ -198,9 +198,7 @@ publicDataGet() {
 sqlExport() {
     if [[ $cms == "m1" ]];then
         declare -A sqlDataInfo=$($sshExec "cd $cmsPath; php -r \"\\\$a=file_get_contents('$configPathFile'); \\\$p=xml_parser_create(); xml_parse_into_struct(\\\$p, \\\$a, \\\$vals, \\\$index); print('( [dbhost]='.\\\$vals[(\\\$index['HOST'][0])]['value'].' ');print('[dbname]='.\\\$vals[(\\\$index['DBNAME'][0])]['value'].' ');print('[dbuser]='.\\\$vals[(\\\$index['USERNAME'][0])]['value'].' ');print('[dbpass]='.\\\$vals[(\\\$index['PASSWORD'][0])]['value'].' )');\"")
-        echo <<EOF 1>/dev/null
-Fixing MC syntax lighting"
-EOF
+
         dbHost=$(echo ${sqlDataInfo[dbhost]})
         dbName=$(echo ${sqlDataInfo[dbname]})
         dbUser=$(echo ${sqlDataInfo[dbuser]})
